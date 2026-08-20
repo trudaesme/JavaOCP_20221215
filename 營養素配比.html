@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式個人營養與熱量動態計算機</title>
+    <style>
+        :root {
+            --primary-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --accent-bmr: #fef3c7;
+            --accent-bmr-text: #92400e;
+            --accent-blue: #2563eb;
+            --header-pink: #fce7f3;
+            --header-pink-text: #9d174d;
+            --accent-gain: #dcfce7;
+            --accent-gain-text: #166534;
+            --accent-loss: #e0f2fe;
+            --accent-loss-text: #075985;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* 數值輸入卡片 */
+        .input-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 2px solid var(--accent-blue);
+            margin-bottom: 2rem;
+        }
+
+        .input-card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .input-group input, .input-group select {
+            padding: 0.75rem 1rem;
+            font-size: 1.05rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.2s;
+            font-weight: bold;
+            color: #0f172a;
+            background-color: #f1f5f9;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--accent-blue);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        /* 表格樣式 */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .table-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .pink-header th {
+            background-color: var(--header-pink);
+            color: var(--header-pink-text);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-gain {
+            background-color: var(--accent-gain);
+            color: var(--accent-gain-text);
+        }
+
+        .badge-loss {
+            background-color: var(--accent-loss);
+            color: var(--accent-loss-text);
+        }
+
+        .calc-value {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .highlight-value {
+            font-weight: 800;
+            font-size: 1.05rem;
+        }
+
+        /* 下拉選單在表格中的樣式 */
+        .select-in-table {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: #fff;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+        }
+
+        /* 警示與提示 */
+        .alert-box {
+            background-color: #fff7ed;
+            border: 1px solid #ffedd5;
+            color: #c2410c;
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🧮 互動式個人營養與熱量動態計算機</h1>
+        <p>輸入「基礎代謝率」與「體重」，並可隨意選擇增肌或減脂的「活動強度類型」，自動計算對應數值！</p>
+    </div>
+
+    <!-- 輸入區域 -->
+    <div class="input-card">
+        <div class="input-card-title">✏️ 請輸入您的個人基礎數據：</div>
+        <div class="input-grid">
+            <div class="input-group">
+                <label for="bmrInput">基礎代謝率 (BMR / Kcal)：</label>
+                <input type="number" id="bmrInput" value="1370" placeholder="例如: 1370" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label for="weightInput">體重 (Weight / KG)：</label>
+                <input type="number" id="weightInput" value="76" placeholder="例如: 76" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>每日建議水分 (CC)：</label>
+                <input type="text" id="waterOutput" readonly style="background-color: #e0f2fe; color: #0369a1;">
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格 1：日常活動代謝 (TDEE) 與三大營養素 -->
+    <div class="table-container">
+        <div class="table-title">🏃 日常活動代謝 (TDEE) 與三大營養素估算</div>
+        <table>
+            <thead class="pink-header">
+                <tr>
+                    <th>活動強度類型</th>
+                    <th>代謝倍率</th>
+                    <th>每日總熱量 (Kcal)</th>
+                    <th>蛋白質 (g)</th>
+                    <th>碳水化合物 (g)</th>
+                    <th>脂肪 (g)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>久坐 (幾乎沒運動)</td>
+                    <td>1.200</td>
+                    <td class="calc-value" id="tdee-sedentary">-</td>
+                    <td class="calc-value" id="p-sedentary">-</td>
+                    <td class="calc-value" id="c-sedentary">-</td>
+                    <td class="calc-value" id="f-sedentary">-</td>
+                </tr>
+                <tr>
+                    <td>低活動 (1-3天)</td>
+                    <td>1.375</td>
+                    <td class="calc-value" id="tdee-low">-</td>
+                    <td class="calc-value" id="p-low">-</td>
+                    <td class="calc-value" id="c-low">-</td>
+                    <td class="calc-value" id="f-low">-</td>
+                </tr>
+                <tr>
+                    <td>中活動 (3-5天)</td>
+                    <td>1.550</td>
+                    <td class="calc-value" id="tdee-mod">-</td>
+                    <td class="calc-value" id="p-mod">-</td>
+                    <td class="calc-value" id="c-mod">-</td>
+                    <td class="calc-value" id="f-mod">-</td>
+                </tr>
+                <tr>
+                    <td>高活動 (6-7天)</td>
+                    <td>1.725</td>
+                    <td class="calc-value" id="tdee-high">-</td>
+                    <td class="calc-value" id="p-high">-</td>
+                    <td class="calc-value" id="c-high">-</td>
+                    <td class="calc-value" id="f-high">-</td>
+                </tr>
+                <tr>
+                    <td>極高活動 (運動員)</td>
+                    <td>1.900</td>
+                    <td class="calc-value" id="tdee-extreme">-</td>
+                    <td class="calc-value" id="p-extreme">-</td>
+                    <td class="calc-value" id="c-extreme">-</td>
+                    <td class="calc-value" id="f-extreme">-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 表格 2：特定目標 (可自由選擇活動強度) -->
+    <div class="table-container">
+        <div class="table-title">🎯 特定體態目標飲食策略（可選取活動強度）</div>
+        <table>
+            <thead class="pink-header">
+                <tr>
+                    <th>目標體態</th>
+                    <th>選擇活動強度類型</th>
+                    <th>熱量調整策略</th>
+                    <th>目標總熱量 (Kcal)</th>
+                    <th>蛋白質 (g)</th>
+                    <th>碳水化合物 (g)</th>
+                    <th>脂肪 (g)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-gain">💪 增肌</span></td>
+                    <td>
+                        <select id="gainActivitySelect" class="select-in-table" onchange="calculate()">
+                            <option value="sedentary">久坐 (幾乎沒運動)</option>
+                            <option value="low">低活動 (1-3天)</option>
+                            <option value="mod" selected>中活動 (3-5天)</option>
+                            <option value="high">高活動 (6-7天)</option>
+                            <option value="extreme">極高活動 (運動員)</option>
+                        </select>
+                    </td>
+                    <td>活動代謝 +300</td>
+                    <td class="calc-value highlight-value" style="color: #15803d;" id="gain-kcal">-</td>
+                    <td class="calc-value" id="gain-p">-</td>
+                    <td class="calc-value" id="gain-c">-</td>
+                    <td class="calc-value" id="gain-f">-</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-loss">🔥 減脂</span></td>
+                    <td>
+                        <select id="lossActivitySelect" class="select-in-table" onchange="calculate()">
+                            <option value="sedentary">久坐 (幾乎沒運動)</option>
+                            <option value="low" selected>低活動 (1-3天)</option>
+                            <option value="mod">中活動 (3-5天)</option>
+                            <option value="high">高活動 (6-7天)</option>
+                            <option value="extreme">極高活動 (運動員)</option>
+                        </select>
+                    </td>
+                    <td>活動代謝 -300</td>
+                    <td class="calc-value highlight-value" style="color: #0369a1;" id="loss-kcal">-</td>
+                    <td class="calc-value" id="loss-p">-</td>
+                    <td class="calc-value" id="loss-c">-</td>
+                    <td class="calc-value" id="loss-f">-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 注意事項 -->
+    <div class="alert-box">
+        <span>💥 <strong>提示：</strong>當您切換「增肌」或「減脂」的活動強度選單時，系統將動態抓取對應強度的 TDEE 進行 +300 / -300 熱量調整，並即時算出相應的蛋白質、碳水化合物與脂肪克數！</span>
+    </div>
+
+    <script>
+        function calculate() {
+            const bmr = parseFloat(document.getElementById('bmrInput').value) || 0;
+            const weight = parseFloat(document.getElementById('weightInput').value) || 0;
+
+            // 1. 水分計算 (體重 * 50cc)
+            document.getElementById('waterOutput').value = weight > 0 ? (weight * 50) + " cc" : "0 cc";
+
+            if (bmr <= 0) return;
+
+            // 2. TDEE 倍率
+            const multipliers = {
+                sedentary: 1.2,
+                low: 1.375,
+                mod: 1.55,
+                high: 1.725,
+                extreme: 1.9
+            };
+
+            // 計算全套 TDEE
+            const tdeeMap = {};
+            for (let key in multipliers) {
+                const tdee = bmr * multipliers[key];
+                tdeeMap[key] = tdee;
+
+                document.getElementById(`tdee-${key}`).innerText = tdee.toFixed(key === 'sedentary' || key === 'extreme' ? 0 : 2);
+                document.getElementById(`p-${key}`).innerText = Math.round(tdee * (123 / 1644));
+                document.getElementById(`c-${key}`).innerText = Math.round(tdee * (164 / 1644));
+                document.getElementById(`f-${key}`).innerText = Math.round(tdee * (55 / 1644));
+            }
+
+            // 3. 動態計算【增肌】：選取的活動 TDEE + 300
+            const gainActivityKey = document.getElementById('gainActivitySelect').value;
+            const selectedGainTdee = tdeeMap[gainActivityKey];
+            const gainKcal = selectedGainTdee + 300;
+            document.getElementById('gain-kcal').innerText = gainKcal.toFixed(2);
+
+            // 增肌三大營養素動態比例計算
+            const gainP = weight > 0 ? Math.round(weight * (242 / 76)) : Math.round(gainKcal * 0.1);
+            const gainC = gainP; 
+            const gainF = Math.round((gainKcal * 0.20) / 9);
+
+            document.getElementById('gain-p').innerText = gainP;
+            document.getElementById('gain-c').innerText = gainC;
+            document.getElementById('gain-f').innerText = gainF;
+
+            // 4. 動態計算【減脂】：選取的活動 TDEE - 300
+            const lossActivityKey = document.getElementById('lossActivitySelect').value;
+            const selectedLossTdee = tdeeMap[lossActivityKey];
+            const lossKcal = selectedLossTdee - 300;
+            document.getElementById('loss-kcal').innerText = lossKcal.toFixed(2);
+
+            // 減脂三大營養素動態比例計算
+            const lossP = weight > 0 ? Math.round(weight * (158 / 76)) : Math.round(lossKcal * 0.1);
+            const lossC = Math.round((lossKcal * 0.30) / 4);
+            const lossF = Math.round((lossKcal * 0.30) / 9);
+
+            document.getElementById('loss-p').innerText = lossP;
+            document.getElementById('loss-c').innerText = lossC;
+            document.getElementById('loss-f').innerText = lossF;
+        }
+
+        // 頁面載入時自動計算
+        window.onload = calculate;
+    </script>
+</body>
+</html>
