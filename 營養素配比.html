@@ -348,7 +348,7 @@
 
     <!-- 注意事項 -->
     <div class="alert-box">
-        <span>💥 <strong>提示：</strong>當您切換「增肌」或「減脂」的活動強度選單時，系統將動態抓取對應強度的 TDEE 進行 +300 / -300 熱量調整，並即時算出相應的蛋白質、碳水化合物與脂肪克數！</span>
+        <span>💥 <strong>提示：</strong>當您切換「增肌」或「減脂」的活動強度選單時，系統會同步依據調整後的目標總熱量，動態重新計算三大營養素（蛋白質、碳水化合物、脂肪）的克數！</span>
     </div>
 
     <script>
@@ -388,9 +388,12 @@
             const gainKcal = selectedGainTdee + 300;
             document.getElementById('gain-kcal').innerText = gainKcal.toFixed(2);
 
-            // 增肌三大營養素動態比例計算
-            const gainP = weight > 0 ? Math.round(weight * (242 / 76)) : Math.round(gainKcal * 0.1);
-            const gainC = gainP; 
+            // 增肌三大營養素（依據目標總熱量比例動態計算）：
+            // 蛋白質：30% 熱量 (4 kcal/g)
+            // 碳水化合物：50% 熱量 (4 kcal/g)
+            // 脂肪：20% 熱量 (9 kcal/g)
+            const gainP = Math.round((gainKcal * 0.30) / 4);
+            const gainC = Math.round((gainKcal * 0.50) / 4); 
             const gainF = Math.round((gainKcal * 0.20) / 9);
 
             document.getElementById('gain-p').innerText = gainP;
@@ -403,8 +406,11 @@
             const lossKcal = selectedLossTdee - 300;
             document.getElementById('loss-kcal').innerText = lossKcal.toFixed(2);
 
-            // 減脂三大營養素動態比例計算
-            const lossP = weight > 0 ? Math.round(weight * (158 / 76)) : Math.round(lossKcal * 0.1);
+            // 減脂三大營養素（依據目標總熱量比例動態計算）：
+            // 蛋白質：40% 熱量 (4 kcal/g)
+            // 碳水化合物：30% 熱量 (4 kcal/g)
+            // 脂肪：30% 熱量 (9 kcal/g)
+            const lossP = Math.round((lossKcal * 0.40) / 4);
             const lossC = Math.round((lossKcal * 0.30) / 4);
             const lossF = Math.round((lossKcal * 0.30) / 9);
 
