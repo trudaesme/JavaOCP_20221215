@@ -182,7 +182,7 @@
             <h3>🎯 業績與營收輸入</h3>
             <div class="form-group">
                 <label for="monthGoal">全月業績目標 (GOAL)</label>
-                <input type="number" id="monthGoal" value="1000000" oninput="calculateReport()">
+                <input type="number" id="monthGoal" value="110000" oninput="calculateReport()">
             </div>
             <div class="form-group">
                 <label for="mtdSales">本月累積業績 (MTD)</label>
@@ -194,7 +194,7 @@
             <h3>🏋️ PT 課堂進度輸入</h3>
             <div class="form-group">
                 <label for="ptGoal">全月課堂目標 (堂數)</label>
-                <input type="number" id="ptGoal" value="500" oninput="calculateReport()">
+                <input type="number" id="ptGoal" value="120" oninput="calculateReport()">
             </div>
             <div class="form-group">
                 <label for="todayPT">今日已上 PT 堂數</label>
@@ -252,33 +252,39 @@
         const shiftVal = document.querySelector('input[name="shift"]:checked').value;
         const shiftText = shiftVal === 'start' ? '當日開始' : '當日結束';
         
-        let passedDays = selectedDayNum;
-        if (passedDays <= 0) passedDays = 0.1; 
+        // 核心修正：根據「時段」切換計算用的已過天數 (passedDays)
+        // 「當日開始」表示今天尚未過完，已過天數為選取日期的前一天
+        let passedDays = shiftVal === 'start' ? selectedDayNum - 1 : selectedDayNum;
+        if (passedDays <= 0) passedDays = 0.1; // 避免 1 號「當日開始」出現除以零問題
         
         const remainingDays = totalDays - passedDays;
 
         document.getElementById('daysDisplay').innerText = 
-            `📅 基準日期：${selectedDate.getFullYear()}/${selectedDate.getMonth()+1}/${selectedDayNum}號 | 時段：${shiftText} | 當月總天數：${totalDays}天 | 計算用已過天數：${Math.floor(passedDays)}天 | 剩餘天數：${Math.ceil(remainingDays)}天`;
+            `📅 基準日期：${selectedDate.getFullYear()}/${selectedDate.getMonth()+1}/${selectedDayNum}號 | 時段：${shiftText} | 當月總天數：${totalDays}天 | 計算用已過天數：${passedDays}天 | 剩餘天數：${remainingDays}天`;
 
         const goal = parseFloat(document.getElementById('monthGoal').value) || 0;
         const mtd = parseFloat(document.getElementById('mtdSales').value) || 0;
         const ptGoal = parseFloat(document.getElementById('ptGoal').value) || 0;
         const ptToday = parseFloat(document.getElementById('todayPT').value) || 0;
 
+        // 計算 PROJ 預估值
         const projRaw = (mtd / passedDays) * totalDays;
         const proj = Math.floor(projRaw);
 
         const percent = goal > 0 ? (proj / goal) * 100 : 0;
 
+        // 計算 DAY NEED 剩餘日均
         let dayNeed = 0;
         if (remainingDays > 0) {
             const dayNeedRaw = (goal - mtd) / remainingDays;
             dayNeed = dayNeedRaw > 0 ? Math.ceil(dayNeedRaw) : 0;
         }
 
+        // 計算 PT 課堂進度
         const ptProj = (ptToday / passedDays) * totalDays;
         const ptPercent = ptGoal > 0 ? (ptProj / ptGoal) * 100 : 0;
 
+        // 渲染數據到頁面
         document.getElementById('resPROJ').innerText = '$' + proj.toLocaleString();
         document.getElementById('resPercent').innerText = percent.toFixed(1) + '%';
         document.getElementById('resDAYNEED').innerText = remainingDays <= 0 ? '本月最後一天結算' : '$' + dayNeed.toLocaleString();
